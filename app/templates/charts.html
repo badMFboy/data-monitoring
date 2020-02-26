@@ -1,0 +1,483 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Мониторинг данных</title>
+  <!-- MDB icon -->
+  <link rel="icon" href="" type="{{url_for('static', filename = 'img/mdb-favicon.ico')}}">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css">
+  <!-- Bootstrap core CSS -->
+  <link rel="stylesheet" href="{{url_for('static', filename = 'css/bootstrap.css')}}">
+  <!-- Material Design Bootstrap -->
+  <link rel="stylesheet" href="{{url_for('static', filename = 'css/mdb.min.css')}}">
+  <!-- Your custom styles (optional) -->
+  <link rel="stylesheet" href="{{url_for('static', filename = 'css/style.css')}}">
+  <!-- myScript -->
+  <script>
+    // For communicate this server, used AJAX request.
+    // Function "postToServer" create AJAX request, and
+    // send POST request with JSON to server. Function "response"
+    // handle response contain JSON. Response update charts, and 
+    // badges. To get params, used function "getParam". To update 
+    // charts, used  functions "addData" and "removeData".
+    // To send continiously request
+    // for AJAX (POST to server)
+    function postToServer() {
+      let req = new XMLHttpRequest();
+      let arr;// for json from server
+      req.open("POST", "/getData", true);
+      req.setRequestHeader("Content-Type", "application/json");
+      req.onreadystatechange = function () // call when catch response
+      {// handler of response of server
+        if (req.readyState === 4) {
+          let status = req.status;
+          if (status >= 200 && status < 300) {
+            arr = req.responseText;
+            arr = JSON.parse(arr);
+            response(arr);
+          }
+        }
+        else {
+          console.log("readyState is ", req.readyState);
+        }
+      };
+      objForm = JSON.stringify(getParam()); // obj to json
+      // console.log("load1",objForm);
+      req.send(objForm);// send our json to server
+    }
+
+    function response(res) {
+      let arr = []
+      arr.push(res["vSeti"]);
+      arr.push(res["vAkk"]);
+      arr.push(res["temp"]);
+      myChart.data.datasets[0].data = arr
+      myChart.update()
+      removeData(myLineChart)
+      addData(myLineChart,'1',res["vSeti"])
+      removeData(myLineChart1)
+      addData(myLineChart1,'2',res["vAkk"])
+      checkBadges(res,"digitaiInA")
+      checkBadges(res,"digitaiInB")
+      checkBadges(res,"digitaiInC")
+      checkBadges(res,"digitaiInD")
+      arr = null
+      document.getElementById("date").value = res["date"];
+      document.getElementById("modulName").value = res["modulName"];
+
+    }
+
+    var setID = []; // for stoped
+
+    function getParam() {
+      let pointId = document.getElementById("point_id").value;
+      let ld1 = document.getElementById("load1").value;
+      let ld2 = document.getElementById("load2").value;
+      let ld3 = document.getElementById("load3").value;
+      let toServer = {"id":pointId,"vSeti": 0, "vAkk": 0,"temp": 0, "imit":0, "load1":ld1,
+      "load2":ld2,"load3":ld3,"digitaiInA":0,"digitaiInB":0,"digitaiInC":0,"digitaiInD":0,"date":"","modulName":""};
+      return toServer
+    }
+
+    function continiousRequest(){
+      // let par = getParam();
+      setID.push(setInterval(postToServer, 1000));
+      console.log('id is', setID);
+      // console.log(par);
+    }
+
+    function stoped() {
+      setID.forEach(function(item){
+        console.log("clear interval");
+        clearInterval(item);})
+    }
+    //
+    // for charts
+    function addData(chart, label, data) {
+      chart.data.datasets.forEach((dataset) => {
+        dataset.data.push(data);
+      });
+      chart.update();
+    }
+    function removeData(chart) {
+      let mas= chart.data.datasets[0].data.length;
+      if (mas>=20){
+        chart.data.datasets[0].data.splice(0,mas-1);
+      }
+      // chart.data.datasets.forEach((dataset) => {
+      //   dataset.data.shift();
+      // });
+      chart.update();
+    }
+    //
+    // for load buttons
+  function changeValue(attr) {
+    let value = document.getElementById(attr).value;
+    if (value == "1"){
+      document.getElementById(attr).value = "0";
+    }
+    else {document.getElementById(attr).value = "1"}
+    checkValue(attr);
+    postToServer();
+  }
+  function checkValue(attr){
+    if (document.getElementById(attr).value == "1")
+    {
+      document.getElementById(attr).setAttribute("class", "btn btn-success waves-effect waves-light");
+    }
+    else 
+    {
+      document.getElementById(attr).setAttribute("class", "btn btn-primary waves-effect waves-light");
+    }
+  }
+  //
+  // for badges
+  function checkBadges(object,id){
+    if (object[id]=="1"){
+      document.getElementById(id).setAttribute("class","badge badge-warning");
+    }
+    else{
+      document.getElementById(id).setAttribute("class","badge badge-light");
+      }
+  }
+  </script>
+</head>
+
+<body class="grey lighten-3">
+  <header>
+    <nav class="navbar fixed-top navbar-expand-lg navbar-light white scrolling-navbar">
+      <div class="container-fluid">
+
+
+        <a href="#" class="navbar-brand waves-effect">
+          <strong class="blue-text"><i class="fas fa-broadcast-tower"></i></strong>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="
+        navbarContent" aria-expanded="false" aria-label="ToggleNavigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- Links -->
+        <div class="collapse navbar-collapse" id="navbarContent">
+
+          <!-- Left -->
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link waves-effect" href="/login">Главная<span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item active" >
+              <a class="nav-link waves-effect" href="#">Мониторинг</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link waves-effect" href="/logout">Выйти</a>
+            </li>
+          </ul>
+          <!-- Right -->
+          <!-- <ul class="navbar-nav nav-flex-icons">
+            <li class="nav-item">
+              <a href="#" class="nav-link waves-effect">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link waves-effect">
+                <i class="fab fa-twitter"></i>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link border border-light rounded waves-effect">
+                <i class="fab fa-github mr-2"></i>GitHub
+              </a>
+            </li>
+          </ul> -->
+        </div>
+    </nav>
+
+    <!--Main layout-->
+    <main class="pt-5 mx-lg-5">
+
+      <div class="container-fluid mt-5">
+        <!-- Heading -->
+        <div class="card mb-4 wow fadeIn">
+          <!--Card content-->
+          <div class="card-body d-sm-flex justify-content-between">
+            <h4 class="mb-2 mb-sm-0 pt-1">
+              <!-- <a href="#">Home Page</a> -->
+              <!-- <span>/</span> -->
+              <span>Наблюдаемый модуль</span>
+            </h4>
+            <form action="/charts" method="POST" name="sel" id="sel1" class="d-flex justify-content-center">
+              {{form.point_id}}
+              {{form.submit()}}
+            </form>
+          </div>
+        </div>
+      </div>
+      <!--  -->
+      <!--  -->
+      <!--Grid row-->
+      <div class="row wow fadeIn">
+
+        <!--Grid column-->
+        <div class="col-md-6 mb-4">
+          <!--Card-->
+          <div class="card">
+            <!-- Card header -->
+            <div class="card-header text-center">Текущие характеристики</div>
+            <!--Card content-->
+            <div class="card-body">
+              <canvas id="lineChart1"></canvas>
+            </div>
+          </div>
+          <!--/.Card-->
+        </div>
+        <!--Grid column-->
+
+
+        <!--Grid column-->
+        <div class="col-md-6 mb-4">
+          <!--Card-->
+          <div class="card mb-4">
+            <!-- Card header -->
+            <div class="card-header text-center">Текущие характеристики</div>
+            <!--Card content-->
+            <div class="card-body">
+              <canvas id="lineChart"></canvas>
+            </div>
+          </div>
+          <!--/.Card-->
+
+        </div>
+        <!--Grid column-->
+
+      </div>
+      <!--Grid row-->
+
+
+      <div class="row wow fadeIn">
+
+        <!--Grid column-->
+        <div class="col-md-6 mb-4">
+          <!--Card-->
+          <div class="card">
+            <!-- Card header -->
+            <div class="card-header text-center">Текущие характеристики</div>
+            <!--Card content-->
+            <div class="card-body">
+              <canvas id="myChart"></canvas>
+            </div>
+          </div>
+          <!--/.Card-->
+        </div>
+        <!--Grid column-->
+
+
+        <!--Grid column-->
+        <div class="col-md-3 mb-4">
+          <!--Card-->
+          <div class="card mb-4">
+            <!-- Card header -->
+            <div class="card-header text-center">Данные цифровых входов</div>
+            <!--Card content-->
+            <div class="card-body">
+              <!-- List group links -->
+              <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+               <h3> <span class="{{ badges.badgeClass1 }}" id="digitaiInA">вход A </span></h3>
+               <h3> <span class="{{ badges.badgeClass2 }}" id="digitaiInB">вход B </span></h3>
+               <h3> <span class="{{ badges.badgeClass3 }}" id="digitaiInC">вход C </span></h3>
+               <h3> <span class="{{ badges.badgeClass4 }}" id="digitaiInD">вход D </span></h3>
+               <div class="md-form mb-1">
+                <input type="text" id="date" class="form-control" size="40" readonly>
+              </div>
+              <div class="md-form mb-1">
+                <input type="text" id="modulName" class="form-control"  size="40" readonly>
+              </div>
+              </div>
+              <!-- List group links -->
+            </div>
+          </div>
+          <!--/.Card-->
+
+        </div>
+        <!--Grid column-->
+        <!--  -->
+        <!--Grid column-->
+        <div class="col-md-3 mb-4">
+          <!--Card-->
+          <div class="card">
+            <!-- Card header -->
+            <div class="card-header text-center">Управление нагрузками</div>
+            <!--Card content-->
+            <div class="card-body">
+              <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+                <button type="button" class="btn btn-primary" id="requestData">Начать опрос</button>
+                <button type="button" class="btn btn-primary" id="stop">Остановить опрос</button>
+                <button type="button" class="{{ loads.btnClass1 }}" id="load1" onclick="changeValue('load1')" value="{{ loads.btnValue1 }}">Нагрузка 1</button>
+                <button type="button" class="{{ loads.btnClass2 }}" id="load2" onclick="changeValue('load2')" value="{{ loads.btnValue2 }}">Нагрузка 2</button>
+                <button type="button" class="{{ loads.btnClass3 }}" id="load3" onclick="changeValue('load3')" value="{{ loads.btnValue3 }}">Нагрузка 3</button>
+              </div>
+            </div>
+          </div>
+          <!--/.Card-->
+        </div>
+        <!--Grid column-->
+      </div>
+
+    </main>
+
+    <!-- Heading -->
+
+
+
+
+
+
+  </header>
+
+  <!-- jQuery -->
+  <script type="text/javascript" src="{{url_for('static', filename = 'js/jquery.min.js')}}"></script>
+  <!-- Bootstrap tooltips -->
+  <script type="text/javascript" src="{{url_for('static', filename = 'js/popper.min.js')}}"></script>
+  <!-- Bootstrap core JavaScript -->
+  <script type="text/javascript" src="{{url_for('static', filename = 'js/bootstrap.min.js')}}"></script>
+  <!-- MDB core JavaScript -->
+  <script type="text/javascript" src="{{url_for('static', filename = 'js/mdb.min.js')}}"></script>
+  <!-- Your custom scripts (optional) -->
+  <script type="text/javascript"></script>
+
+
+  <script type="text/javascript">
+    // Animations initialization
+    new WOW().init();
+
+  </script>
+
+  <!-- Charts -->
+  <script>
+    // let minDataValue = Math.min(0, options.ticks.suggestedMin);
+    // let maxDataValue = Math.max(300, options.ticks.suggestedMax);
+    // ["January", "February", "March", "April", "May", "June", "July","Augast","September","October","November","December"],
+    //Bar chart
+    var ctx = document.getElementById("myChart").getContext('2d');
+    var myChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ["Сеть", "Аккумулятор", "Темература"],
+        datasets: [{
+          label: 'Аналоговые датчики',
+          data: [12, 19, 3],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+          ],
+          borderColor: [
+            'rgba(75, 192, 192, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(75, 192, 192, 1)',
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          yAxes: [{
+            ticks: {
+              beginAtZero: true
+            }
+          }]
+        }
+      }
+    });
+
+
+    //line chart
+    var ctxL = document.getElementById("lineChart").getContext('2d');
+    var myLineChart = new Chart(ctxL, {
+      type: 'line',
+      data: {
+        labels: ["1", "2", "3", "4", "5", "6", "7","8","9","10","11","12","13","14","15","16","17","18","19","20"],
+        datasets: [{
+          label: "Напряжение сети",
+          backgroundColor: [
+            'rgba(105, 0, 132, .2)',
+          ],
+          borderColor: [
+            'rgba(200, 99, 132, .7)',
+          ],
+          borderWidth: 2,
+          data: [0,]
+        },
+        // {
+        //   label: "My Second dataset",
+        //   backgroundColor: [
+        //     'rgba(0, 137, 132, .2)',
+        //   ],
+        //   borderColor: [
+        //     'rgba(0, 10, 130, .7)',
+        //   ],
+        //   data: [0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0]
+        // }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales:{
+          yAxes:[{
+            ticks:{
+              minDataValue: 180,
+              maxDataValue: 240
+            }
+          }]
+        }
+      }
+    });
+
+    //line chart1
+    var ctxL = document.getElementById("lineChart1").getContext('2d');
+    var myLineChart1 = new Chart(ctxL, {
+      type: 'line',
+      data: {
+        labels:["1", "2", "3", "4", "5", "6", "7","8","9","10","11","12","13","14","15","16","17","18","19","20"],
+        datasets: [{
+          label: "Напряжение аккумулятора",
+          backgroundColor: [
+            'rgba(105, 0, 132, .2)',
+          ],
+          borderColor: [
+            'rgba(200, 99, 132, .7)',
+          ],
+          borderWidth: 2,
+          data: [0,]
+        },
+        // {
+        //   label: "My Second dataset",
+        //   backgroundColor: [
+        //     'rgba(0, 137, 132, .2)',
+        //   ],
+        //   borderColor: [
+        //     'rgba(0, 10, 130, .7)',
+        //   ],
+        //   data: [0, 0, 0, 0, 0, 0, 0, 0, 0 ,0, 0, 0]
+        // }
+        ]
+      },
+      options: {
+        responsive: true
+      }
+    });
+  </script>
+  <script>
+    let el = document.getElementById("requestData");
+    el.addEventListener("click", continiousRequest);
+    let el1 = document.getElementById("stop");
+    el1.addEventListener("click", stoped);
+    // postToServer(getParam());
+  </script>
+</body>
+</html>
+{% endblock %}
