@@ -64,6 +64,12 @@ class Point (db.Model):
             self.load1,self.load2,self.load3,
             self.digInA,self.digInB,self.digInC,self.digInD) 
 
+    def get(self,attr):
+        return object.__getattribute__(self,attr)
+
+    def setAttr(self,attr,value):
+        return object.__setattr__(self,attr,value)
+
     def setPoint(self, PointName):
        self.pointname  = PointName
 
