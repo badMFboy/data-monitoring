@@ -59,7 +59,8 @@ class Point (db.Model):
         self.digInD = D
 
     def __repr__(self):
-        return '<Point {},{},{},{},{},{},{},{},{},{},{} >'.format(
+        return '<class Point \n pointname:{},volt1:{},volt2:{},temp:{},\n\
+            load1:{},load2:{},load3:{},digInA:{},digInB:{},digInC:{},digInD{} >'.format(
             self.pointname,self.volt1,self.volt2,self.temp,
             self.load1,self.load2,self.load3,
             self.digInA,self.digInB,self.digInC,self.digInD) 

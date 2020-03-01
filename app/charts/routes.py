@@ -8,7 +8,6 @@ from app.models import Point
 @bp.route('/charts',methods=['GET','POST'])
 @login_required
 def charts():
-    print("yes, know your get charts page")
 
     form = fewPoint(Point) # create Form for rendering
     loads = BtnAttribute('0','0','0') # create Btns Class for rendering

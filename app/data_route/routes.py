@@ -100,9 +100,7 @@ def putData():
         #     print("Item in db: {}".format(item))
   
         if match:
-            print("from modul {} data is: {}".format(
-                content["pointname"], content))
-
+            
             point = Point.query.filter_by(pointname=content["pointname"]).first()
             
             if point is None: # create new instance
@@ -123,6 +121,7 @@ def putData():
 
             db.session.add(point)
             db.session.commit()
+            # print(point)
 
             reply = {"load1": point.load1,"load2": point.load2,"load3": point.load3}
             return (jsonify(reply), "200")
